@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNITED ESTIMATOR APP - Portable</title>
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- jsPDF -->
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf-autotable@latest/dist/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary: #fbbf24;
+            /* Yellow */
+            --bg-dark: #121212;
+            /* Gray */
+            --card-bg: #1e1e1e;
+            /* Gray */
+            --text-main: #f8fafc;
+            --text-muted: #9ca3af;
+            --border: #374151;
+            --accent-blue: #3b82f6;
+            /* Blue */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--primary);
+            margin-top: 0;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #000;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.6rem;
+            background: #000;
+            border: 1px solid var(--border);
+            color: white;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            font-weight: bold;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        const DEFAULT_SETTINGS = {
+            materialWaste: 7,
+            fabMultipliers: { 1: 40, 2: 65, 3: 95 },
+            instMultipliers: { 1: 30, 2: 50, 3: 75 },
+            finishAdder: { mode: 'percent', value: 20 },
+            rentalAdder: { mode: 'percent', value: 10 },
+            commissionRate: 10,
+            profitMargins: { conservative: 40, fair: 35, friends: 30 },
+            taxRate: 7
+        };
+
+        const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('project');
+            const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+            const [users, setUsers] = useState(['Admin', 'Sales 1']);
+            const [currentUser, setCurrentUser] = useState('Admin');
+
+            const [history, setHistory] = useState(() => {
+                const saved = localStorage.getItem('united_history');
+                return saved ? JSON.parse(saved) : [];
+            });
+
+            useEffect(() => {
+                localStorage.setItem('united_history', JSON.stringify(history));
+            }, [history]);
+
+            const [projectInfo, setProjectInfo] = useState({
+                projectName: '', clientName: '', estimateNumber: 'EST' + Math.floor(Math.random() * 10000),
+                date: new Date().toISOString().split('T')[0]
+            });
+            const [materials, setMaterials] = useState([]);
+            const [options, setOptions] = useState({
+                fabComplexity: 2, instComplexity: 2,
+                hasSpecialFinish: false, hasRental: false,
+                equipmentRental: 0, scope: 'full', commissionRateOverride: null
+            });
+
+            const estimate = useMemo(() => {
+                const subtotal = materials.reduce((s, m) => s + (m.quantity * m.unitCost), 0);
+                const Mw = subtotal * (1 + settings.materialWaste / 100);
+
+                const isFab = options.scope === 'full' || options.scope === 'fab';
+                const isInst = options.scope === 'full' || options.scope === 'inst';
+
+                const fabCost = isFab ? Mw * (settings.fabMultipliers[options.fabComplexity] / 100) : 0;
+                let instCost = isInst ? Mw * (settings.instMultipliers[options.instComplexity] / 100) : 0;
+
+                // Installation Minimum: $450
+                if (isInst && instCost > 0 && instCost < 450) {
+                    instCost = 450;
+                }
+
+                const finish = options.hasSpecialFinish ? Mw * (settings.finishAdder.value / 100) : 0;
+                const rental = options.hasRental ? Mw * (settings.rentalAdder.value / 100) : 0;
+
+                const subtotalBasis = Mw + fabCost + instCost + finish + rental + (options.equipmentRental || 0);
+                const commRate = options.commissionRateOverride !== null ? options.commissionRateOverride : settings.commissionRate;
+
+                const variants = Object.entries(settings.profitMargins).map(([key, margin]) => {
+                    const m = margin / 100;
+                    const c = commRate / 100;
+                    const denom = 1 - m - c;
+                    let price = denom > 0 ? subtotalBasis / denom : 0;
+                    const earnings = price * m;
+                    const commission = price * c;
+                    const tax = price * (settings.taxRate / 100);
+                    const total = price + tax;
+                    return { key, margin, subtotal: price, tax, total, earnings, commission, commRate };
+                });
+
+                return { subtotal, Mw, fabCost, instCost, subtotalBasis, variants };
+            }, [materials, settings, options]);
+
+            const addToHistory = () => {
+                const newEntry = {
+                    id: Date.now(),
+                    timestamp: new Date().toLocaleString(),
+                    projectInfo: { ...projectInfo },
+                    materials: [...materials],
+                    options: { ...options },
+                    estimate: estimate
+                };
+                setHistory([newEntry, ...history]);
+                alert('Guardado en historial!');
+            };
+
+            const exportPDF = () => {
+                const doc = new jspdf.jsPDF();
+                const yellow = [251, 191, 36], blue = [59, 130, 246], gray = [100, 100, 100];
+
+                doc.setFontSize(22);
+                doc.setTextColor(40, 40, 40);
+                doc.text("UNITED ESTIMATOR APP", 105, 20, { align: 'center' });
+
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Vendedor: ${currentUser}`, 20, 35);
+                doc.text(`Date: ${projectInfo.date}`, 150, 35);
+
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text(`Client: ${projectInfo.clientName || 'N/A'}`, 20, 50);
+                doc.text(`Project: ${projectInfo.projectName || 'N/A'}`, 20, 56);
+
+                let currentY = 70;
+                const matsData = materials.map(m => [m.description, m.quantity, formatCurrency(m.unitCost), formatCurrency(m.quantity * m.unitCost)]);
+                doc.autoTable({ startY: currentY, head: [['Item', 'Qty', 'Price', 'Total']], body: matsData, theme: 'striped', headStyles: { fillStyle: gray } });
+
+                currentY = doc.lastAutoTable.finalY + 10;
+                doc.text("Resumen de Ventas / Pricing", 20, currentY);
+                currentY += 5;
+                const variantData = estimate.variants.map(v => [
+                    v.key.toUpperCase(),
+                    formatCurrency(v.total),
+                    `${formatCurrency(v.commission)} (${((v.commission / v.total) * 100).toFixed(1)}% of total)`,
+                    formatCurrency(v.earnings),
+                    `${v.margin}%`
+                ]);
+                doc.autoTable({ startY: currentY, head: [['Scenario', 'Total', 'Comision', 'Ganancia', 'Margen']], body: variantData, headStyles: { fillStyle: yellow, textColor: [0, 0, 0] } });
+
+                currentY = doc.lastAutoTable.finalY + 10;
+                doc.text("Desglose de Producción Detallado", 20, currentY);
+                currentY += 5;
+                const breakdown = [
+                    ['Materiales w/ Waste', `Subtotal + ${settings.materialWaste}%`, formatCurrency(estimate.Mw)],
+                    ['Fabricación', estimate.fabCost > 0 ? 'Cost' : 'N/A', formatCurrency(estimate.fabCost)],
+                    ['Instalación', estimate.instCost > 0 ? 'Cost' : 'N/A', formatCurrency(estimate.instCost)],
+                    ['Producción Base', 'Total production logic', formatCurrency(estimate.subtotalBasis)]
+                ];
+                doc.autoTable({ startY: currentY, head: [['Concepto', 'Lógica', 'Costo']], body: breakdown, headStyles: { fillStyle: blue } });
+
+                doc.save(`Estimate_${projectInfo.projectName || 'United'}.pdf`);
+                addToHistory();
+            };
+
+            return (
+                <div className="container">
+                    <header className="flex justify-between items-center" style={{ marginBottom: '2rem' }}>
+                        <div>
+                            <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>UNITED ESTIMATOR APP</h1>
+                            <p className="text-muted">User: <strong style={{ color: 'var(--accent-blue)' }}>{currentUser}</strong></p>
+                        </div>
+                        <div className="flex gap-2">
+                            <button className="btn btn-outline" onClick={addToHistory}>Save History</button>
+                            <button className="btn btn-primary" onClick={exportPDF}>Export PDF</button>
+                        </div>
+                    </header>
+
+                    <nav className="tabs">
+                        {['project', 'materials', 'users', 'history', 'estimate'].map(t => (
+                            <div key={t} className={`tab ${activeTab === t ? 'active' : ''}`} onClick={() => setActiveTab(t)} style={{ textTransform: 'capitalize' }}>{t}</div>
+                        ))}
+                    </nav>
+
+                    {activeTab === 'project' && (
+                        <div className="grid">
+                            <div className="card">
+                                <h3>General Info</h3>
+                                <div style={{ marginBottom: '1rem' }}><label>Project Name</label><input value={projectInfo.projectName} onChange={e => setProjectInfo({ ...projectInfo, projectName: e.target.value })} /></div>
+                                <div style={{ marginBottom: '1rem' }}><label>Client Name</label><input value={projectInfo.clientName} onChange={e => setProjectInfo({ ...projectInfo, clientName: e.target.value })} /></div>
+                            </div>
+                            <div className="card">
+                                <h3>Scope & Complexity</h3>
+                                <label>Project Scope</label>
+                                <select value={options.scope} onChange={e => setOptions({ ...options, scope: e.target.value })} style={{ marginBottom: '1rem' }}>
+                                    <option value="full">Fabrication + Installation</option>
+                                    <option value="fab">Fabrication Only</option>
+                                    <option value="inst">Installation Only</option>
+                                    <option value="service">Service Only</option>
+                                </select>
+                                <div style={{ opacity: (options.scope === 'full' || options.scope === 'fab') ? 1 : 0.4, marginBottom: '1rem' }}>
+                                    <label>Fabrication Lvl</label>
+                                    <div className="flex gap-2">
+                                        {[1, 2, 3].map(v => <button key={v} onClick={() => setOptions({ ...options, fabComplexity: v })} className={`btn ${options.fabComplexity === v ? 'btn-primary' : 'btn-outline'}`} style={{ flex: 1 }}>{v}</button>)}
+                                    </div>
+                                </div>
+                                <div style={{ opacity: (options.scope === 'full' || options.scope === 'inst') ? 1 : 0.4, marginBottom: '1rem' }}>
+                                    <label>Installation Lvl</label>
+                                    <div className="flex gap-2">
+                                        {[1, 2, 3].map(v => <button key={v} onClick={() => setOptions({ ...options, instComplexity: v })} className={`btn ${options.instComplexity === v ? 'btn-primary' : 'btn-outline'}`} style={{ flex: 1 }}>{v}</button>)}
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                                    <div style={{ marginBottom: '1rem' }}>
+                                        <label>Custom Rental Fee ($)</label>
+                                        <input type="number" value={options.equipmentRental} onChange={e => setOptions({ ...options, equipmentRental: parseFloat(e.target.value) || 0 })} placeholder="0.00" />
+                                    </div>
+                                    <div style={{ marginBottom: '1rem' }}>
+                                        <label>Commission Override (%)</label>
+                                        <input type="number" value={options.commissionRateOverride || ''} onChange={e => setOptions({ ...options, commissionRateOverride: e.target.value === '' ? null : parseFloat(e.target.value) })} placeholder="Base %" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'materials' && (
+                        <div className="card">
+                            <h3>Items</h3>
+                            <table style={{ fontSize: '0.85rem' }}>
+                                <thead>
+                                    <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border)' }}>
+                                        <th style={{ padding: '0.5rem 0' }}>Description</th>
+                                        <th>Qty</th>
+                                        <th>Cost</th>
+                                        <th>Total</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {materials.map((m, i) => (
+                                        <tr key={i}>
+                                            <td style={{ padding: '0.25rem 0' }}><input value={m.description} onChange={e => { const n = [...materials]; n[i].description = e.target.value; setMaterials(n); }} placeholder="Item..." /></td>
+                                            <td style={{ width: '60px' }}><input type="number" value={m.quantity} onChange={e => { const n = [...materials]; n[i].quantity = parseFloat(e.target.value) || 0; setMaterials(n); }} /></td>
+                                            <td style={{ width: '80px' }}><input type="number" value={m.unitCost} onChange={e => { const n = [...materials]; n[i].unitCost = parseFloat(e.target.value) || 0; setMaterials(n); }} /></td>
+                                            <td style={{ fontWeight: 'bold', textAlign: 'right' }}>{formatCurrency((m.quantity || 0) * (m.unitCost || 0))}</td>
+                                            <td style={{ width: '40px', textAlign: 'right' }}><button onClick={() => setMaterials(materials.filter((_, idx) => idx !== i))}>❌</button></td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            <button className="btn btn-outline" style={{ marginTop: '1rem' }} onClick={() => setMaterials([...materials, { description: '', quantity: 1, unitCost: 0 }])}>+ Add Item</button>
+                        </div>
+                    )}
+
+                    {activeTab === 'history' && (
+                        <div className="card">
+                            <h3>Saved Estimates</h3>
+                            {history.length === 0 ? <p className="text-muted">No history found.</p> : history.map(entry => (
+                                <div key={entry.id} className="card p-4 flex justify-between items-center" style={{ marginBottom: '0.5rem' }}>
+                                    <div><strong>{entry.projectInfo.projectName}</strong><br /><small className="text-muted">{entry.timestamp}</small></div>
+                                    <button className="btn btn-outline" onClick={() => { setProjectInfo(entry.projectInfo); setMaterials(entry.materials); setOptions(entry.options); setActiveTab('project'); }}>Load</button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {activeTab === 'users' && (
+                        <div className="card">
+                            <h3>Vendedores / Salespeople</h3>
+                            <div className="flex gap-2" style={{ marginBottom: '1rem' }}>
+                                <input value={currentUser} onChange={e => { }} placeholder="Active User" disabled style={{ opacity: 0.6 }} />
+                                <span className="badge">Active</span>
+                            </div>
+                            <div className="grid">
+                                {users.map(u => (
+                                    <div key={u} className={`card p-3 flex justify-between items-center ${currentUser === u ? 'glass' : ''}`} style={{ marginBottom: '0.5rem', cursor: 'pointer', border: currentUser === u ? '2px solid var(--primary)' : '1px solid var(--border)' }} onClick={() => setCurrentUser(u)}>
+                                        <span>{u}</span>
+                                        {currentUser === u && <span style={{ color: 'var(--primary)' }}>✓</span>}
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="mt-4 flex gap-2">
+                                <input id="new-user-input" placeholder="New Salesperson Name" />
+                                <button className="btn btn-primary" onClick={() => { const val = document.getElementById('new-user-input').value; if (val) { setUsers([...users, val]); document.getElementById('new-user-input').value = ''; } }}>Add</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'estimate' && (
+                        <div className="grid">
+                            {estimate.variants.map(v => (
+                                <div key={v.key} className="card">
+                                    <h4>{v.key.toUpperCase()}</h4>
+                                    <h2>{formatCurrency(v.total)}</h2>
+                                    <div style={{ fontSize: '0.8rem' }}>Com: {formatCurrency(v.commission)} | Gain: {formatCurrency(v.earnings)}</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>

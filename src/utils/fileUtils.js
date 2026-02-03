@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { formatCurrency } from './calculations';
 
-export const exportToPDF = (projectInfo, materials, estimate, options, settings, currentUserId) => {
+export const exportToPDF = (projectInfo, materials, estimate, options, settings, currentUserId, logoSrc) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -13,7 +13,7 @@ export const exportToPDF = (projectInfo, materials, estimate, options, settings,
     const colorDarkGray = [40, 40, 40];
 
     // Header with Logo
-    const logoSrc = "/logo.png";
+    // logoSrc is passed as a parameter
 
     // Title
     doc.setFontSize(22);

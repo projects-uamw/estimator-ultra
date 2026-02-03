@@ -21,6 +21,8 @@ import {
 import { useEstimator } from './context/EstimatorContext';
 import { formatCurrency, formatPercent } from './utils/calculations';
 import { exportToPDF, exportToCSV } from './utils/fileUtils';
+import logo from './assets/logo.png';
+import './App.css';
 
 // Sub-components
 const UserManagement = () => {
@@ -269,7 +271,7 @@ const MaterialsEntry = () => {
           />
         </div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
+        <div className="table-container">
           <table>
             <thead>
               <tr>
@@ -619,60 +621,62 @@ const CalculatorOutput = () => {
           This table shows exactly how each cost layer is calculated starting from your materials list.
         </p>
         <div style={{ marginTop: '1rem' }}>
-          <table className="breakdown-table">
-            <thead>
-              <tr style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
-                <th>Cost Layer</th>
-                <th>Logic / Calculation</th>
-                <th style={{ textAlign: 'right' }}>Total Cost</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>Materials (Subtotal)</strong></td>
-                <td>Sum of all line items</td>
-                <td style={{ textAlign: 'right' }}>{formatCurrency(estimate.materialsSubtotal)}</td>
-              </tr>
-              <tr>
-                <td><strong>Materials w/ Waste</strong></td>
-                <td>Subtotal * (1 + {settings.materialWaste}%)</td>
-                <td style={{ textAlign: 'right' }}>{formatCurrency(estimate.materialsWithWaste)}</td>
-              </tr>
-              {estimate.fabCost > 0 && (
-                <tr>
-                  <td><strong>Fabrication Cost</strong></td>
-                  <td>Level {options.fabComplexity} ({settings.fabMultipliers[options.fabComplexity]}% of Mat w/ Waste)</td>
-                  <td style={{ textAlign: 'right' }}>{formatCurrency(estimate.fabCost)}</td>
+          <div className="table-container">
+            <table className="breakdown-table">
+              <thead>
+                <tr style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
+                  <th>Cost Layer</th>
+                  <th>Logic / Calculation</th>
+                  <th style={{ textAlign: 'right' }}>Total Cost</th>
                 </tr>
-              )}
-              {estimate.instCost > 0 && (
+              </thead>
+              <tbody>
                 <tr>
-                  <td><strong>Installation Cost</strong></td>
-                  <td>Level {options.instComplexity} ({settings.instMultipliers[options.instComplexity]}% of Mat w/ Waste)</td>
-                  <td style={{ textAlign: 'right' }}>{formatCurrency(estimate.instCost)}</td>
+                  <td><strong>Materials (Subtotal)</strong></td>
+                  <td>Sum of all line items</td>
+                  <td style={{ textAlign: 'right' }}>{formatCurrency(estimate.materialsSubtotal)}</td>
                 </tr>
-              )}
-              {estimate.finishAdder > 0 && (
                 <tr>
-                  <td><strong>Special Finish</strong></td>
-                  <td>{options.finishType || 'Default'} ({settings.finishAdder.value}% of Mat w/ Waste)</td>
-                  <td style={{ textAlign: 'right' }}>{formatCurrency(estimate.finishAdder)}</td>
+                  <td><strong>Materials w/ Waste</strong></td>
+                  <td>Subtotal * (1 + {settings.materialWaste}%)</td>
+                  <td style={{ textAlign: 'right' }}>{formatCurrency(estimate.materialsWithWaste)}</td>
                 </tr>
-              )}
-              {estimate.rentalAdder > 0 && (
-                <tr>
-                  <td><strong>Rental Equipment (Internal)</strong></td>
-                  <td>{options.rentalType || 'Default'} ({settings.rentalAdder.value}% of Mat w/ Waste)</td>
-                  <td style={{ textAlign: 'right' }}>{formatCurrency(estimate.rentalAdder)}</td>
+                {estimate.fabCost > 0 && (
+                  <tr>
+                    <td><strong>Fabrication Cost</strong></td>
+                    <td>Level {options.fabComplexity} ({settings.fabMultipliers[options.fabComplexity]}% of Mat w/ Waste)</td>
+                    <td style={{ textAlign: 'right' }}>{formatCurrency(estimate.fabCost)}</td>
+                  </tr>
+                )}
+                {estimate.instCost > 0 && (
+                  <tr>
+                    <td><strong>Installation Cost</strong></td>
+                    <td>Level {options.instComplexity} ({settings.instMultipliers[options.instComplexity]}% of Mat w/ Waste)</td>
+                    <td style={{ textAlign: 'right' }}>{formatCurrency(estimate.instCost)}</td>
+                  </tr>
+                )}
+                {estimate.finishAdder > 0 && (
+                  <tr>
+                    <td><strong>Special Finish</strong></td>
+                    <td>{options.finishType || 'Default'} ({settings.finishAdder.value}% of Mat w/ Waste)</td>
+                    <td style={{ textAlign: 'right' }}>{formatCurrency(estimate.finishAdder)}</td>
+                  </tr>
+                )}
+                {estimate.rentalAdder > 0 && (
+                  <tr>
+                    <td><strong>Rental Equipment (Internal)</strong></td>
+                    <td>{options.rentalType || 'Default'} ({settings.rentalAdder.value}% of Mat w/ Waste)</td>
+                    <td style={{ textAlign: 'right' }}>{formatCurrency(estimate.rentalAdder)}</td>
+                  </tr>
+                )}
+                <tr style={{ borderTop: '2px solid var(--border)', backgroundColor: 'rgba(59, 130, 246, 0.05)' }}>
+                  <td><strong>Total Production Cost (Baseline)</strong></td>
+                  <td>Sum of materials + labor + rentals</td>
+                  <td style={{ textAlign: 'right' }}><strong>{formatCurrency(estimate.subtotalCostBasis)}</strong></td>
                 </tr>
-              )}
-              <tr style={{ borderTop: '2px solid var(--border)', backgroundColor: 'rgba(59, 130, 246, 0.05)' }}>
-                <td><strong>Total Production Cost (Baseline)</strong></td>
-                <td>Sum of materials + labor + rentals</td>
-                <td style={{ textAlign: 'right' }}><strong>{formatCurrency(estimate.subtotalCostBasis)}</strong></td>
-              </tr>
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
 
           <div className="mt-8" style={{ marginTop: '2rem' }}>
             <h4 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>Final Selling Price Deduction</h4>
@@ -713,7 +717,7 @@ export default function App() {
   };
 
   const handlePDF = () => {
-    exportToPDF(projectInfo, materials, estimate, options, settings, currentUserId);
+    exportToPDF(projectInfo, materials, estimate, options, settings, currentUserId, logo);
   };
 
   const renderContent = () => {
@@ -730,27 +734,27 @@ export default function App() {
   };
 
   return (
-    <div className="container">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div className="flex items-center gap-4" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div className="logo-container" style={{ background: '#fff', padding: '5px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="/logo.png" alt="United Logo" style={{ height: '40px', objectFit: 'contain' }} />
+    <div className="container app-container">
+      <header className="app-header">
+        <div className="header-brand">
+          <div className="logo-container">
+            <img src={logo} alt="United Logo" className="app-logo" />
           </div>
           <div>
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--primary)', margin: 0 }}>
+            <h1 className="app-title">
               UNITED ESTIMATOR APP
             </h1>
-            <p style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
-              <User size={14} /> Active User: <strong>{currentUserId}</strong>
+            <p className="user-badge">
+              <User size={14} /> <span>Active User: <strong>{currentUserId}</strong></span>
             </p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div className="header-actions">
           <button className="btn btn-outline" onClick={() => { addToHistory(estimate); alert('Guardado en historial / Saved to history!'); }}>
-            <Save size={16} /> Save
+            <Save size={16} /> <span className="hide-mobile">Save</span>
           </button>
           <button className="btn btn-primary" onClick={handlePDF}>
-            <FileDown size={16} /> Export PDF
+            <FileDown size={16} /> <span className="hide-mobile">Export PDF</span>
           </button>
         </div>
       </header>

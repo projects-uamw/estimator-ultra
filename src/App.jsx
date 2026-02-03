@@ -271,36 +271,34 @@ const MaterialsEntry = () => {
           />
         </div>
       ) : (
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>Description</th>
-                <th>Unit</th>
-                <th>Qty</th>
-                <th>Unit Cost</th>
-                <th>Total</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {materials.map(m => (
-                <tr key={m.id}>
-                  <td>
+        <>
+          {/* Mobile-Only Card View */}
+          <div className="mobile-only mobile-card-list">
+            {materials.map((m) => (
+              <div key={m.id} className="material-card">
+                <button className="card-delete-btn" onClick={() => removeLine(m.id)}>
+                  <Trash2 size={18} />
+                </button>
+                <div className="card-row">
+                  <div className="card-label">Category</div>
+                  <div className="card-value" style={{ width: '120px' }}>
                     <select value={m.category} onChange={(e) => updateLine(m.id, 'category', e.target.value)}>
-                      <option>Aluminum</option>
-                      <option>Steel</option>
-                      <option>Glass</option>
-                      <option>Hardware</option>
-                      <option>Anchors</option>
-                      <option>Concrete</option>
-                      <option>Paint/Coating</option>
-                      <option>Misc</option>
+                      <option>Standard Railing</option>
+                      <option>Premium Glass</option>
+                      <option>Posts & Hardware</option>
+                      <option>Custom Fab</option>
                     </select>
-                  </td>
-                  <td><input value={m.description} onChange={(e) => updateLine(m.id, 'description', e.target.value)} placeholder="Mat description" /></td>
-                  <td style={{ width: '80px' }}>
+                  </div>
+                </div>
+                <div className="card-row">
+                  <div className="card-label">Description</div>
+                  <div className="card-value" style={{ flex: 1 }}>
+                    <input value={m.description} onChange={(e) => updateLine(m.id, 'description', e.target.value)} placeholder="Mat description" />
+                  </div>
+                </div>
+                <div className="grid grid-2" style={{ gap: '0.75rem' }}>
+                  <div>
+                    <div className="card-label">Unit</div>
                     <select value={m.unit} onChange={(e) => updateLine(m.id, 'unit', e.target.value)}>
                       <option>EA</option>
                       <option>FT</option>
@@ -310,27 +308,87 @@ const MaterialsEntry = () => {
                       <option>SET</option>
                       <option>GAL</option>
                     </select>
-                  </td>
-                  <td style={{ width: '80px' }}><input type="number" value={m.quantity} onChange={(e) => updateLine(m.id, 'quantity', parseFloat(e.target.value) || 0)} /></td>
-                  <td style={{ width: '100px' }}><input type="number" value={m.unitCost} onChange={(e) => updateLine(m.id, 'unitCost', parseFloat(e.target.value) || 0)} /></td>
-                  <td style={{ fontWeight: 600 }}>{formatCurrency(m.quantity * m.unitCost)}</td>
-                  <td>
-                    <button className="" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ef4444' }} onClick={() => removeLine(m.id)}>
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {materials.length === 0 && (
+                  </div>
+                  <div>
+                    <div className="card-label">Quantity</div>
+                    <input type="number" value={m.quantity} onChange={(e) => updateLine(m.id, 'quantity', parseFloat(e.target.value) || 0)} />
+                  </div>
+                </div>
+                <div className="grid grid-2 mt-3" style={{ gap: '0.75rem', marginTop: '0.75rem' }}>
+                  <div>
+                    <div className="card-label">Unit Cost</div>
+                    <input type="number" value={m.unitCost} onChange={(e) => updateLine(m.id, 'unitCost', parseFloat(e.target.value) || 0)} />
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div className="card-label">Total</div>
+                    <div className="card-value" style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>{formatCurrency(m.quantity * m.unitCost)}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {materials.length === 0 && (
+              <div className="card" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No materials added yet.</div>
+            )}
+          </div>
+
+          {/* Desktop-Only Table View */}
+          <div className="table-container desktop-only">
+            <table>
+              <thead>
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-                    No materials added yet. Click "Add Item" to start.
-                  </td>
+                  <th>Category</th>
+                  <th>Description</th>
+                  <th>Unit</th>
+                  <th>Qty</th>
+                  <th>Unit Cost</th>
+                  <th>Total</th>
+                  <th></th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {materials.map((m) => (
+                  <tr key={m.id}>
+                    <td style={{ width: '150px' }}>
+                      <select value={m.category} onChange={(e) => updateLine(m.id, 'category', e.target.value)}>
+                        <option>Standard Railing</option>
+                        <option>Premium Glass</option>
+                        <option>Posts & Hardware</option>
+                        <option>Custom Fab</option>
+                      </select>
+                    </td>
+                    <td><input value={m.description} onChange={(e) => updateLine(m.id, 'description', e.target.value)} placeholder="Mat description" /></td>
+                    <td style={{ width: '80px' }}>
+                      <select value={m.unit} onChange={(e) => updateLine(m.id, 'unit', e.target.value)}>
+                        <option>EA</option>
+                        <option>FT</option>
+                        <option>LF</option>
+                        <option>SF</option>
+                        <option>LB</option>
+                        <option>SET</option>
+                        <option>GAL</option>
+                      </select>
+                    </td>
+                    <td style={{ width: '80px' }}><input type="number" value={m.quantity} onChange={(e) => updateLine(m.id, 'quantity', parseFloat(e.target.value) || 0)} /></td>
+                    <td style={{ width: '100px' }}><input type="number" value={m.unitCost} onChange={(e) => updateLine(m.id, 'unitCost', parseFloat(e.target.value) || 0)} /></td>
+                    <td style={{ fontWeight: 600 }}>{formatCurrency(m.quantity * m.unitCost)}</td>
+                    <td>
+                      <button style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ef4444' }} onClick={() => removeLine(m.id)}>
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {materials.length === 0 && (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                      No materials added yet. Click "Add Item" to start.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       <div className="mt-6 pt-4 border-t" style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>

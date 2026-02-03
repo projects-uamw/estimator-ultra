@@ -1,7 +1,7 @@
 /* Responsive Layout Enhancements */
 
 .app-container {
-  padding: 1rem !important;
+  padding: 0.75rem !important;
 }
 
 @media (min-width: 768px) {
@@ -13,8 +13,10 @@
 .app-header {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
 }
 
 @media (min-width: 640px) {
@@ -22,18 +24,20 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
   }
 }
 
 .header-brand {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .logo-container {
   background: #fff;
-  padding: 5px;
+  padding: 4px;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -42,14 +46,21 @@
 }
 
 .app-logo {
-  height: 40px;
+  height: 32px;
   object-fit: contain;
+}
+
+@media (min-width: 640px) {
+  .app-logo {
+    height: 40px;
+  }
 }
 
 .app-title {
   color: var(--primary);
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
 }
 
 @media (min-width: 640px) {
@@ -62,9 +73,9 @@
   color: var(--text-muted);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-  font-size: 0.75rem;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+  font-size: 0.7rem;
 }
 
 .header-actions {
@@ -81,11 +92,15 @@
 
 .header-actions .btn {
   flex: 1;
+  padding: 0.6rem;
+  font-size: 0.85rem;
 }
 
 @media (min-width: 640px) {
   .header-actions .btn {
     flex: none;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9375rem;
   }
 }
 
@@ -93,12 +108,20 @@
 .tabs {
   overflow-x: auto;
   white-space: nowrap;
-  padding-bottom: 0.75rem !important;
+  padding-bottom: 0.5rem !important;
+  margin-bottom: 1.5rem !important;
   -webkit-overflow-scrolling: touch;
-  margin-left: -1rem;
-  margin-right: -1rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  margin-left: -0.75rem;
+  margin-right: -0.75rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  scrollbar-width: none;
+  /* Hide scrollbar Firefox */
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+  /* Hide scrollbar Chrome/Safari */
 }
 
 @media (min-width: 768px) {
@@ -110,11 +133,73 @@
     padding-right: 0;
     white-space: normal;
     flex-wrap: wrap;
+    margin-bottom: 2rem !important;
   }
 }
 
 .tab {
   flex-shrink: 0;
+  font-size: 0.9rem;
+  padding: 0.6rem 0.9rem !important;
+}
+
+/* Mobile Materials Card View */
+.mobile-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.material-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  position: relative;
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  gap: 0.5rem;
+}
+
+.card-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.card-value {
+  font-weight: 500;
+}
+
+.card-delete-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  color: #ef4444;
+  background: transparent;
+  border: none;
+  padding: 0.25rem;
+}
+
+/* Hide/Show for Mobile Cards */
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .desktop-only {
+    display: table-row-group;
+  }
+
+  .mobile-only {
+    display: none;
+  }
 }
 
 /* Utils */
@@ -131,11 +216,11 @@
   margin-bottom: 1.5rem;
   border-radius: 8px;
   border: 1px solid var(--border);
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
   min-width: 600px;
-  /* Force scroll on small screens */
 }
 
 @media (min-width: 768px) {

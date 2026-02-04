@@ -340,48 +340,46 @@
 
             const exportPDF = () => {
                 const doc = new jspdf.jsPDF();
-                const yellow = [251, 191, 36], blue = [59, 130, 246], gray = [100, 100, 100];
+                const margin = 14;
+                const colorBlue = [33, 53, 110];
+                const colorGray = [100, 100, 100];
+
+                // Logo (Using the same base64 as React app)
+                const LOGO_BASE64 = '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\n' +
+                    'vev66fXpS++v2mRBeT09mUvWclhK9M9v7R+C+n7D9B/S/o8vE6Inm9HfiLzOn6S83H8P9p0X+vX9AsPAt3WivXunfP/0XBEu/AExppqH07bsTwZIZEM0M0mTyYAkEkHHA0DP6zIOnD6l+I/9W99rU8F2ie0vS70A+OfN6409S++v2maQpA8fepOem7p4p84xE99ftM75df4Vg76Y719r2XIdf071WfMvU9ZNo8S76m+D+un0m0Yqf4N/7OwS6zI0vSND9dfuMJ0YisY9CnyHUPtP/fvt/Xz/vWf/7+vlS76+jU7O0vAnmNn8mYToOAnl/H9vP50DhrwiWfg3BmK4vAt2/n/f38/9W/x8867qAkKByzXn/fP7f6X/zZ6v6C9Y807D/+fzf6n99/Tz3mX96R0H26L6pD7FfP/9v9P+hf7oY8xR/AeyD/g0xLRE9Anv/TfS/v7f/L6t6Fvx7/4Jg8fvRE6mZ9//v5//N/3t9xrfvDxAs+fSp00f/9Pn8v9fnh353OAb8G/Yev0fPH8m9LOfH0q9Pqf5K8p+fP5//N/r/0D9f8e24CFLNCp7YQ8vL/fPz5/P/Xp8S7vX6v+zN9P8P/v8S7Uv3B497D2m/Anv/DTCnDsLeP8Lp/i1H9w+Puz8Uf7EO5S9I8P75+fP5f6f/P/6N5q9I9Ab6vP+v9P+/f/v6p099mP1m8p+fP5//9/r80D9dD3POfRCZscveI/rYfX5D9PAnUvL/fv58/v9v6p+v9M6/U9fPH70v+UvYvLOnKTCZobLInh+NveN++09S99f98/Pn8/9enxT0f18X93p6Uv0lSvVX6P99/XypLhPSv/Xv6Xm9f8vR/ePnT9P/30r/n7x3/u/r/3/1P07GPMXf3+D05v8W9v630v9n+93H2S8mIn58+09S8v9+/nz+//9V/8u275mMvAInUo0f3p9R/p+fP5//9/XzFf/P2L9v/79P7MAnv7+Bn2P5BwAAAAASUVORK5CYII=';
+
+                try {
+                    doc.addImage(LOGO_BASE64, 'PNG', margin, 10, 50, 15);
+                } catch (e) { }
 
                 doc.setFontSize(22);
-                doc.setTextColor(40, 40, 40);
-                doc.text("UNITED ESTIMATOR APP", 105, 20, { align: 'center' });
+                doc.setTextColor(colorBlue[0], colorBlue[1], colorBlue[2]);
+                doc.text('ESTIMATE REPORT', 105, 25, { align: 'center' });
 
                 doc.setFontSize(10);
                 doc.setTextColor(100, 100, 100);
-                doc.text(`Vendedor: ${currentUser}`, 20, 35);
-                doc.text(`Date: ${projectInfo.date}`, 150, 35);
+                doc.text(`Salesperson: ${currentUser}`, margin, 35);
+                doc.text(`Date: ${projectInfo.date}`, 180, 35);
 
                 doc.setFontSize(12);
                 doc.setTextColor(0, 0, 0);
-                doc.text(`Client: ${projectInfo.clientName || 'N/A'}`, 20, 50);
-                doc.text(`Project: ${projectInfo.projectName || 'N/A'}`, 20, 56);
+                doc.text(`Client: ${projectInfo.clientName || 'N/A'}`, margin, 50);
+                doc.text(`Project: ${projectInfo.projectName || 'N/A'}`, margin, 56);
 
                 let currentY = 70;
                 const matsData = materials.map(m => [m.description, m.quantity, formatCurrency(m.unitCost), formatCurrency(m.quantity * m.unitCost)]);
-                doc.autoTable({ startY: currentY, head: [['Item', 'Qty', 'Price', 'Total']], body: matsData, theme: 'striped', headStyles: { fillStyle: gray } });
+                doc.autoTable({ startY: currentY, head: [['Item', 'Qty', 'Price', 'Total']], body: matsData, theme: 'striped', headStyles: { fillStyle: [100, 100, 100] } });
 
                 currentY = doc.lastAutoTable.finalY + 10;
-                doc.text("Resumen de Ventas / Pricing", 20, currentY);
+                doc.text("Pricing Summary", margin, currentY);
                 currentY += 5;
                 const variantData = estimate.variants.map(v => [
                     v.key.toUpperCase(),
                     formatCurrency(v.total),
-                    `${formatCurrency(v.commission)} (${((v.commission / v.total) * 100).toFixed(1)}% of total)`,
-                    formatCurrency(v.earnings),
-                    `${v.margin}%`
+                    `${v.margin}%`,
+                    formatCurrency(v.earnings)
                 ]);
-                doc.autoTable({ startY: currentY, head: [['Scenario', 'Total', 'Comision', 'Ganancia', 'Margen']], body: variantData, headStyles: { fillStyle: yellow, textColor: [0, 0, 0] } });
-
-                currentY = doc.lastAutoTable.finalY + 10;
-                doc.text("Desglose de Producción Detallado", 20, currentY);
-                currentY += 5;
-                const breakdown = [
-                    ['Materiales w/ Waste', `Subtotal + ${settings.materialWaste}%`, formatCurrency(estimate.Mw)],
-                    ['Fabricación', estimate.fabCost > 0 ? 'Cost' : 'N/A', formatCurrency(estimate.fabCost)],
-                    ['Instalación', estimate.instCost > 0 ? 'Cost' : 'N/A', formatCurrency(estimate.instCost)],
-                    ['Producción Base', 'Total production logic', formatCurrency(estimate.subtotalBasis)]
-                ];
-                doc.autoTable({ startY: currentY, head: [['Concepto', 'Lógica', 'Costo']], body: breakdown, headStyles: { fillStyle: blue } });
+                doc.autoTable({ startY: currentY, head: [['Scenario', 'Total', 'Margin', 'Earnings']], body: variantData, headStyles: { fillStyle: colorBlue } });
 
                 doc.save(`Estimate_${projectInfo.projectName || 'United'}.pdf`);
                 addToHistory();
@@ -391,12 +389,12 @@
                 <div className="container">
                     <header className="flex justify-between items-center" style={{ marginBottom: '2rem' }}>
                         <div className="flex items-center">
-                            <div className="logo-container">
-                                <img src="logo.png" alt="Logo" className="app-logo" />
+                            <div className="logo-container" style={{ marginRight: '1rem' }}>
+                                <img src="src/assets/logo.png" alt="Logo" style={{ height: '40px' }} />
                             </div>
                             <div>
-                                <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>UNITED ESTIMATOR APP</h1>
-                                <p className="text-muted" style={{ margin: 0 }}>User: <strong style={{ color: 'var(--accent-blue)' }}>{currentUser}</strong></p>
+                                <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>UNITED ESTIMATOR</h1>
+                                <p className="text-muted" style={{ margin: 0 }}>Vendedor: <strong style={{ color: 'var(--accent-blue)' }}>{currentUser}</strong></p>
                             </div>
                         </div>
                         <div className="flex gap-2" style={{ width: '100%', marginTop: '1rem' }}>

@@ -11,6 +11,8 @@ export const useEstimator = () => {
     return context;
 };
 
+const API_BASE = 'http://127.0.0.1:8000';
+
 export const EstimatorProvider = ({ children }) => {
     // Persistence
     const [settings, setSettings] = useState(() => {
@@ -47,46 +49,139 @@ export const EstimatorProvider = ({ children }) => {
         commissionRateOverride: null,
     });
 
-    const [users, setUsers] = useState(() => {
-        const saved = localStorage.getItem('metalwork_users');
-        return saved ? JSON.parse(saved) : ['Admin', 'Sales 1'];
-    });
+    const [users, setUsers] = useState(['Admin']);
+    const [currentUserId, setCurrentUserId] = useState('Admin');
+    const [history, setHistory] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const [currentUserId, setCurrentUserId] = useState(() => {
-        return localStorage.getItem('metalwork_current_user') || 'Admin';
-    });
+    // Initial Load from Backend
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [usersRes, historyRes] = await Promise.all([
+                    fetch(`${API_BASE}/users/`),
+                    fetch(`${API_BASE}/history/`)
+                ]);
 
-    const [history, setHistory] = useState(() => {
-        const saved = localStorage.getItem('metalwork_history');
-        return saved ? JSON.parse(saved) : [];
-    });
+                if (usersRes.ok) {
+                    const usersData = await usersRes.json();
+                    if (usersData.length > 0) {
+                        setUsers(usersData.map(u => u.name));
+                        const savedUser = localStorage.getItem('metalwork_current_user');
+                        if (savedUser && usersData.find(u => u.name === savedUser)) {
+                            setCurrentUserId(savedUser);
+                        } else {
+                            setCurrentUserId(usersData[0].name);
+                        }
+                    }
+                }
 
-    // Persist settings
+                if (historyRes.ok) {
+                    const historyData = await historyRes.json();
+                    setHistory(historyData.map(h => ({
+                        ...JSON.parse(h.state_json),
+                        id: h.id,
+                        timestamp: h.timestamp
+                    })));
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    // Persist settings locally
     useEffect(() => {
         localStorage.setItem('metalwork_settings', JSON.stringify(settings));
     }, [settings]);
 
     useEffect(() => {
-        localStorage.setItem('metalwork_users', JSON.stringify(users));
         localStorage.setItem('metalwork_current_user', currentUserId);
-    }, [users, currentUserId]);
+    }, [currentUserId]);
 
-    useEffect(() => {
-        localStorage.setItem('metalwork_history', JSON.stringify(history));
-    }, [history]);
+    const addUser = async (name) => {
+        try {
+            const res = await fetch(`${API_BASE}/users/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            if (res.ok) {
+                const newUser = await res.json();
+                setUsers(prev => [...prev, newUser.name]);
+                return true;
+            }
+        } catch (error) {
+            console.error("Error adding user:", error);
+        }
+        return false;
+    };
 
-    const addToHistory = (estimateData) => {
+    const deleteUser = async (name) => {
+        try {
+            const usersRes = await fetch(`${API_BASE}/users/`);
+            const usersData = await usersRes.json();
+            const user = usersData.find(u => u.name === name);
+            if (user) {
+                const res = await fetch(`${API_BASE}/users/${user.id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    setUsers(prev => prev.filter(u => u !== name));
+                    if (currentUserId === name) setCurrentUserId(users[0] || 'Admin');
+                }
+            }
+        } catch (error) {
+            console.error("Error deleting user:", error);
+        }
+    };
+
+    const addToHistory = async (estimateData) => {
+        const id = `EST-${Date.now()}`;
+        const timestamp = new Date().toLocaleString();
         const newEntry = {
-            id: `EST-${Date.now()}`,
-            timestamp: new Date().toLocaleString(),
+            id,
+            timestamp,
             projectInfo: { ...projectInfo },
             materials: [...materials],
             options: { ...options },
             estimate: estimateData
         };
-        setHistory(prev => [newEntry, ...prev]);
-        return newEntry.id;
+
+        try {
+            const res = await fetch(`${API_BASE}/history/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id,
+                    timestamp,
+                    project_name: projectInfo.projectName || 'Untitled',
+                    client_name: projectInfo.clientName || 'N/A',
+                    prepared_by: currentUserId,
+                    total_price: estimateData.variants.fair.totalSellingPrice,
+                    state_json: JSON.stringify(newEntry)
+                })
+            });
+            if (res.ok) {
+                setHistory(prev => [newEntry, ...prev]);
+            }
+        } catch (error) {
+            console.error("Error saving history:", error);
+        }
+        return id;
     };
+
+    const deleteHistoryEntry = async (id) => {
+        try {
+            const res = await fetch(`${API_BASE}/history/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setHistory(prev => prev.filter(h => h.id !== id));
+            }
+        } catch (error) {
+            console.error("Error deleting history:", error);
+        }
+    }
 
     // Derived calculation
     const estimate = useMemo(() => {
@@ -111,13 +206,16 @@ export const EstimatorProvider = ({ children }) => {
         options,
         setOptions,
         users,
-        setUsers,
+        addUser,
+        deleteUser,
         currentUserId,
         setCurrentUserId,
         estimate,
         history,
+        isLoading,
         setHistory,
-        addToHistory
+        addToHistory,
+        deleteHistoryEntry
     };
 
     return (
